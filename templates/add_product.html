@@ -1,0 +1,493 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Product - ShopHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    
+    [data-bs-theme="dark"] .form-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .form-control, .form-control:focus {
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border: 2px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .form-control {
+        border-color: #334155;
+        background: #0f172a;
+    }
+    
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .image-upload-area {
+        border: 3px dashed #cbd5e1;
+        border-radius: 15px;
+        padding: 3rem;
+        text-align: center;
+        background: var(--bs-body-bg);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .image-upload-area:hover {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .image-preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .image-preview {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        aspect-ratio: 1;
+        border: 3px solid #e2e8f0;
+        cursor: grab;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    
+    [data-bs-theme="dark"] .image-preview {
+        border-color: #334155;
+    }
+    
+    .image-preview:active {
+        cursor: grabbing;
+    }
+    
+    .image-preview.dragging {
+        opacity: 0.4;
+        border-color: #6366f1;
+    }
+    
+    .image-preview.over {
+        border-color: #6366f1;
+        border-style: dashed;
+        transform: scale(1.05);
+    }
+    
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+    }
+    
+    .image-preview-remove {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: transform 0.2s;
+    }
+    
+    .image-preview-remove:hover {
+        transform: scale(1.1);
+    }
+    
+    .image-preview-badge {
+        position: absolute;
+        bottom: 5px;
+        left: 5px;
+        background: #6366f1;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        pointer-events: none;
+    }
+    
+    .image-preview-main {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background: #10b981;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        pointer-events: none;
+    }
+    
+    .input-group-text {
+        background: var(--card-bg);
+        border: 2px solid #e2e8f0;
+        color: var(--bs-body-color);
+        font-weight: 600;
+    }
+    
+    [data-bs-theme="dark"] .input-group-text {
+        border-color: #334155;
+        background: #1e293b;
+    }
+    
+    .reorder-info {
+        background: rgba(99, 102, 241, 0.1);
+        border-left: 4px solid #6366f1;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    
+    [data-bs-theme="dark"] .reorder-info {
+        background: rgba(99, 102, 241, 0.2);
+    }
+    
+    .reorder-buttons {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+    }
+    
+    .image-preview:hover .reorder-buttons {
+        opacity: 1;
+        pointer-events: all;
+    }
+    
+    .reorder-btn {
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+    
+    .reorder-btn:hover {
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <h2 class="mb-4 fw-bold text-center">
+        <i class="fas fa-plus-circle text-primary"></i> Add New Product
+    </h2>
+    
+    <form method="post" enctype="multipart/form-data" id="productForm">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-tag"></i> Product Name
+            </label>
+            <input type="text" name="name" class="form-control" placeholder="Enter product name" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-align-left"></i> Description
+            </label>
+            <textarea name="description" class="form-control" rows="4" placeholder="Enter product description" required></textarea>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-rupee-sign"></i> Price (₹)
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text">₹</span>
+                    <input type="number" name="price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-boxes"></i> Stock Quantity
+                </label>
+                <input type="number" name="stock" class="form-control" placeholder="0" min="0" required>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-images"></i> Product Images
+            </label>
+            
+            <div class="image-upload-area" onclick="document.getElementById('imageInput').click()">
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <h5>Click to upload images</h5>
+                <p class="text-muted mb-0">or drag and drop files here</p>
+                <small class="text-muted">First image will be the main display image</small>
+            </div>
+            
+            <input type="file" id="imageInput" name="images" class="d-none" accept="image/*" multiple>
+            
+            <div id="imagePreviewContainer" class="image-preview-container"></div>
+            
+            <div id="reorderInfo" class="reorder-info d-none">
+                <i class="fas fa-arrows-alt text-primary"></i>
+                <strong>Tip:</strong> Drag images to reorder, or use arrow buttons to move. The first image will be the main product image.
+            </div>
+        </div>
+        
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary btn-lg flex-fill">
+                <i class="fas fa-check"></i> Add Product
+            </button>
+            <a href="{% url 'seller_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('imageInput');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const uploadArea = document.querySelector('.image-upload-area');
+    const reorderInfo = document.getElementById('reorderInfo');
+    const form = document.getElementById('productForm');
+    let selectedFiles = [];
+    let dragSrcEl = null;
+    let isSubmitting = false; // Prevent double submission
+    
+    // Handle file selection
+    imageInput.addEventListener('change', function(e) {
+        const newFiles = Array.from(e.target.files);
+        selectedFiles = [...selectedFiles, ...newFiles];
+        displayPreviews();
+        
+        if (selectedFiles.length > 0) {
+            reorderInfo.classList.remove('d-none');
+        }
+    });
+    
+    // Drag and drop for upload area
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.style.borderColor = '#6366f1';
+        uploadArea.style.background = 'rgba(99, 102, 241, 0.1)';
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = '';
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = '';
+        
+        const newFiles = Array.from(e.dataTransfer.files);
+        selectedFiles = [...selectedFiles, ...newFiles];
+        displayPreviews();
+        
+        if (selectedFiles.length > 0) {
+            reorderInfo.classList.remove('d-none');
+        }
+    });
+    
+    // FIXED: Prevent double submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isSubmitting) {
+            console.log('Already submitting, ignoring...');
+            return false;
+        }
+        
+        isSubmitting = true;
+        console.log('Form submitting with', selectedFiles.length, 'files');
+        
+        // Create new FormData with ordered files
+        const formData = new FormData(form);
+        
+        // Remove old images field
+        formData.delete('images');
+        
+        // Add files in correct order
+        selectedFiles.forEach((file, index) => {
+            formData.append('images', file);
+            console.log(`Added file ${index + 1}:`, file.name);
+        });
+        
+        // Submit via fetch
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                return response.text().then(text => {
+                    console.error('Server response:', text);
+                    alert('Error uploading product. Please try again.');
+                    isSubmitting = false;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error uploading product. Please try again.');
+            isSubmitting = false;
+        });
+        
+        return false; // Prevent default form submission
+    });
+    
+    function displayPreviews() {
+        previewContainer.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'image-preview';
+                previewDiv.draggable = true;
+                previewDiv.setAttribute('data-index', index);
+                
+                previewDiv.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview ${index + 1}">
+                    <button type="button" class="image-preview-remove" onclick="window.removeImage(${index}); event.stopPropagation();">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="reorder-buttons">
+                        ${index > 0 ? `<button type="button" class="reorder-btn" onclick="window.moveImage(${index}, ${index-1}); event.stopPropagation();"><i class="fas fa-arrow-left"></i></button>` : ''}
+                        ${index < selectedFiles.length - 1 ? `<button type="button" class="reorder-btn" onclick="window.moveImage(${index}, ${index+1}); event.stopPropagation();"><i class="fas fa-arrow-right"></i></button>` : ''}
+                    </div>
+                    ${index === 0 ? '<span class="image-preview-main"><i class="fas fa-star"></i> Main</span>' : ''}
+                    <span class="image-preview-badge">#${index + 1}</span>
+                `;
+                
+                // Drag events
+                previewDiv.addEventListener('dragstart', handleDragStart);
+                previewDiv.addEventListener('dragover', handleDragOver);
+                previewDiv.addEventListener('drop', handleDrop);
+                previewDiv.addEventListener('dragenter', handleDragEnter);
+                previewDiv.addEventListener('dragleave', handleDragLeave);
+                previewDiv.addEventListener('dragend', handleDragEnd);
+                
+                previewContainer.appendChild(previewDiv);
+            };
+            
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        this.classList.add('dragging');
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleDragEnter(e) {
+        if (this !== dragSrcEl) {
+            this.classList.add('over');
+        }
+    }
+    
+    function handleDragLeave(e) {
+        this.classList.remove('over');
+    }
+    
+    function handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        if (dragSrcEl !== this) {
+            const from = parseInt(dragSrcEl.getAttribute('data-index'));
+            const to = parseInt(this.getAttribute('data-index'));
+            
+            // Swap files
+            const temp = selectedFiles[from];
+            selectedFiles[from] = selectedFiles[to];
+            selectedFiles[to] = temp;
+            
+            displayPreviews();
+        }
+        
+        this.classList.remove('over');
+        return false;
+    }
+    
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.image-preview').forEach(el => {
+            el.classList.remove('over');
+        });
+    }
+    
+    // Global functions
+    window.removeImage = function(index) {
+        selectedFiles.splice(index, 1);
+        displayPreviews();
+        
+        if (selectedFiles.length === 0) {
+            reorderInfo.classList.add('d-none');
+        }
+    };
+    
+    window.moveImage = function(from, to) {
+        const temp = selectedFiles[from];
+        selectedFiles[from] = selectedFiles[to];
+        selectedFiles[to] = temp;
+        displayPreviews();
+    };
+});
+</script>
+
+
+{% endblock %}

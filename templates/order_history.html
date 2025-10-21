@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+
+{% block title %}Order History - LazyShops{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    [data-bs-theme="dark"] .order-card {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .order-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+    
+    .order-header {
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    [data-bs-theme="dark"] .order-header {
+        border-bottom-color: #334155;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .order-timeline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .order-timeline {
+        border-top-color: #334155;
+    }
+    
+    .timeline-step {
+        text-align: center;
+        flex: 1;
+        position: relative;
+    }
+    
+    .timeline-step.active .timeline-icon {
+        background: #6366f1;
+        color: white;
+    }
+    
+    .timeline-step.completed .timeline-icon {
+        background: #10b981;
+        color: white;
+    }
+    
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-size: 1.2rem;
+    }
+    
+    [data-bs-theme="dark"] .timeline-icon {
+        background: #334155;
+        color: #cbd5e1;
+    }
+    
+    .return-status-box {
+        background: var(--bs-body-bg);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+        border: 2px solid #f59e0b;
+    }
+    
+    [data-bs-theme="dark"] .return-status-box {
+        border-color: #fbbf24;
+        background: #1e293b;
+    }
+    
+    .return-status-box .return-title {
+        color: var(--bs-body-color);
+    }
+    
+    .return-status-box .return-label {
+        color: var(--bs-body-color);
+    }
+    
+    .return-status-box .return-text {
+        color: var(--bs-secondary-color);
+    }
+    
+    [data-bs-theme="dark"] .return-status-box .return-text {
+        color: #94a3b8;
+    }
+    
+    [data-bs-theme="dark"] .form-control {
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: #334155;
+    }
+    
+    [data-bs-theme="dark"] .alert-info {
+        background-color: #1e3a5f;
+        border-color: #3b82f6;
+        color: #93c5fd;
+    }
+    
+    [data-bs-theme="dark"] .alert-success {
+        background-color: #14532d;
+        border-color: #22c55e;
+        color: #86efac;
+    }
+    
+    [data-bs-theme="dark"] .alert-primary {
+        background-color: #1e293b;
+        border-color: #6366f1;
+        color: #c7d2fe;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4 fw-bold">
+    <i class="fas fa-box text-primary"></i> Order History
+</h1>
+
+{% if orders %}
+    {% for order in orders %}
+    <div class="order-card">
+        <div class="order-header">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <small class="text-muted">Order #</small>
+                    <h5 class="mb-0 fw-bold">{{ order.id }}</h5>
+                </div>
+                <div class="col-md-2">
+                    <small class="text-muted">Date</small>
+                    <p class="mb-0">{{ order.date|date:"M d, Y" }}</p>
+                </div>
+                <div class="col-md-2">
+                    <small class="text-muted">Total</small>
+                    <p class="mb-0 fw-bold text-primary fs-5">₹{{ order.total_price }}</p>
+                </div>
+                <div class="col-md-2">
+                    <small class="text-muted">Status</small>
+                    <p class="mb-0">
+                        {% if order.status == 'pending' %}
+                            <span class="status-badge bg-warning text-dark">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        {% elif order.status == 'processing' %}
+                            <span class="status-badge bg-info text-white">
+                                <i class="fas fa-cog fa-spin"></i> Processing
+                            </span>
+                        {% elif order.status == 'shipped' %}
+                            <span class="status-badge bg-primary text-white">
+                                <i class="fas fa-shipping-fast"></i> Shipped
+                            </span>
+                        {% elif order.status == 'delivered' %}
+                            <span class="status-badge bg-success text-white">
+                                <i class="fas fa-check-circle"></i> Delivered
+                            </span>
+                        {% elif order.status == 'cancelled' %}
+                            <span class="status-badge bg-danger text-white">
+                                <i class="fas fa-times-circle"></i> Cancelled
+                            </span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    {% if order.status == 'pending' or order.status == 'processing' %}
+                        <a href="{% url 'cancel_order' order.id %}" class="btn btn-sm btn-danger w-100" 
+                           onclick="return confirm('Are you sure you want to cancel this order?')">
+                            <i class="fas fa-times-circle"></i> Cancel Order
+                        </a>
+                    {% elif order.status == 'delivered' %}
+                        {% if order.return_requests.exists %}
+                            {% with return_req=order.return_requests.first %}
+                                {% if return_req.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark w-100 py-2">
+                                        <i class="fas fa-hourglass-half"></i> Return Pending
+                                    </span>
+                                {% elif return_req.status == 'approved' %}
+                                    <span class="badge bg-info text-white w-100 py-2">
+                                        <i class="fas fa-check-circle"></i> Return Approved
+                                    </span>
+                                {% elif return_req.status == 'rejected' %}
+                                    <span class="badge bg-danger text-white w-100 py-2">
+                                        <i class="fas fa-times-circle"></i> Return Rejected
+                                    </span>
+                                {% elif return_req.status == 'item_received' %}
+                                    <span class="badge bg-success text-white w-100 py-2">
+                                        <i class="fas fa-box"></i> Item Received
+                                    </span>
+                                {% elif return_req.status == 'refund_processing' %}
+                                    <span class="badge bg-primary text-white w-100 py-2">
+                                        <i class="fas fa-money-bill-wave"></i> Refund Processing
+                                    </span>
+                                {% elif return_req.status == 'refund_completed' %}
+                                    <span class="badge bg-success text-white w-100 py-2">
+                                        <i class="fas fa-check-double"></i> Refund Completed
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <a href="{% url 'request_return' order.id %}" class="btn btn-sm btn-warning w-100">
+                                <i class="fas fa-undo"></i> Request Return
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <strong>Items:</strong>
+            <ul class="list-unstyled mt-2">
+                {% for item in order.items.all %}
+                <li class="mb-1">
+                    <i class="fas fa-shopping-bag text-primary"></i>
+                    {{ item.product.name }} x {{ item.quantity }} - ₹{{ item.price }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <!-- Return Request Status Box -->
+        {% if order.return_requests.exists %}
+            {% with return_req=order.return_requests.first %}
+            <div class="return-status-box">
+                <h6 class="fw-bold mb-3 return-title">
+                    <i class="fas fa-undo text-warning"></i> Return & Refund Status
+                </h6>
+                
+                <!-- Progress Bar -->
+                <div class="mb-3">
+                    {% if return_req.status == 'pending' %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-warning text-dark" role="progressbar" style="width: 16%">16% - Pending</div>
+                        </div>
+                    {% elif return_req.status == 'approved' %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 33%">33% - Approved</div>
+                        </div>
+                    {% elif return_req.status == 'item_received' %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 66%">66% - Item Received</div>
+                        </div>
+                    {% elif return_req.status == 'refund_processing' %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 83%">83% - Refund Processing</div>
+                        </div>
+                    {% elif return_req.status == 'refund_completed' %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%">100% - Refund Completed ✓</div>
+                        </div>
+                    {% elif return_req.status == 'rejected' %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 100%">Rejected ✗</div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2 return-label"><strong>Request Date:</strong> {{ return_req.created_at|date:"M d, Y H:i" }}</p>
+                        <p class="mb-2 return-label"><strong>Current Status:</strong></p>
+                        <p class="mb-2">
+                            {% if return_req.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">⏳ Pending Seller Review</span>
+                            {% elif return_req.status == 'approved' %}
+                                <span class="badge bg-info">✓ Approved - Ship Item Back</span>
+                            {% elif return_req.status == 'rejected' %}
+                                <span class="badge bg-danger">✗ Rejected by Seller</span>
+                            {% elif return_req.status == 'item_received' %}
+                                <span class="badge bg-success">📦 Item Received by Seller</span>
+                            {% elif return_req.status == 'refund_processing' %}
+                                <span class="badge bg-primary">💰 Refund Processing</span>
+                            {% elif return_req.status == 'refund_completed' %}
+                                <span class="badge bg-success">✓ Refund Completed</span>
+                            {% endif %}
+                        </p>
+                        {% if return_req.tracking_number %}
+                            <p class="mb-1 return-label"><strong>Tracking:</strong> <span class="badge bg-secondary">{{ return_req.tracking_number }}</span></p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 return-label"><strong>Your Reason:</strong></p>
+                        <p class="small mb-2 return-text">{{ return_req.reason|truncatewords:20 }}</p>
+                        {% if return_req.admin_response %}
+                            <p class="mb-1 return-label"><strong>Seller Response:</strong></p>
+                            <p class="small mb-2 return-text">{{ return_req.admin_response }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Status Messages -->
+                {% if return_req.status == 'approved' %}
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-info-circle"></i> <strong>Next Step:</strong> Please ship the item back to the seller and add the courier tracking number below.
+                    </div>
+                {% elif return_req.status == 'item_received' %}
+                    <div class="alert alert-success mt-3 mb-0">
+                        <i class="fas fa-check-circle"></i> <strong>Item Received!</strong> The seller has received your returned item. Refund will be initiated shortly.
+                    </div>
+                {% elif return_req.status == 'refund_processing' %}
+                    <div class="alert alert-primary mt-3 mb-0">
+                        <i class="fas fa-money-bill-wave"></i> <strong>Refund in Progress!</strong> Your refund of <strong>₹{{ return_req.refund_amount }}</strong> is being processed.
+                    </div>
+                {% endif %}
+                
+                <!-- Refund Completion Details -->
+                {% if return_req.status == 'refund_completed' %}
+                    <div class="alert alert-success mt-3 mb-0">
+                        <h6 class="fw-bold mb-2"><i class="fas fa-check-circle"></i> Refund Completed Successfully!</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Refund Amount:</strong> <span class="fs-5 text-success">₹{{ return_req.refund_amount }}</span></p>
+                                <p class="mb-1"><strong>Refund Date:</strong> {{ return_req.refund_date|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Refund Method:</strong> {{ return_req.refund_method }}</p>
+                                <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">Completed ✓</span></p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Add Tracking (if approved and no tracking yet) -->
+                {% if return_req.status == 'approved' and not return_req.tracking_number %}
+                    <form method="POST" action="{% url 'update_return_tracking' return_req.id %}" class="mt-3">
+                        {% csrf_token %}
+                        <label class="form-label fw-semibold return-label">Add Courier Tracking Number:</label>
+                        <div class="input-group">
+                            <input type="text" name="tracking_number" class="form-control" placeholder="Enter courier tracking number" required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-shipping-fast"></i> Update Tracking
+                            </button>
+                        </div>
+                        <small class="text-muted">Add your courier tracking number after shipping the item back</small>
+                    </form>
+                {% endif %}
+            </div>
+            {% endwith %}
+        {% endif %}
+        
+        <!-- Order Timeline -->
+        {% if order.status != 'cancelled' %}
+        <div class="order-timeline">
+            <div class="timeline-step completed">
+                <div class="timeline-icon">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <small>Order Placed</small>
+            </div>
+            <div class="timeline-step {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}completed{% elif order.status == 'pending' %}active{% endif %}">
+                <div class="timeline-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <small>Processing</small>
+            </div>
+            <div class="timeline-step {% if order.status == 'shipped' or order.status == 'delivered' %}completed{% elif order.status == 'processing' %}active{% endif %}">
+                <div class="timeline-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <small>Shipped</small>
+            </div>
+            <div class="timeline-step {% if order.status == 'delivered' %}completed active{% endif %}">
+                <div class="timeline-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <small>Delivered</small>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <small class="text-muted">
+                    <i class="fas fa-map-marker-alt"></i> Delivery Address:
+                </small>
+                <p class="mb-0">{{ order.address }}</p>
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted">
+                    <i class="fas fa-phone"></i> Contact:
+                </small>
+                <p class="mb-0">{{ order.phone }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
+        <h3>No Orders Yet</h3>
+        <p class="text-muted mb-4">You haven't placed any orders yet</p>
+        <a href="{% url 'home' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag"></i> Start Shopping
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

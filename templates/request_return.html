@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Return - LazyShops{% endblock %}
+
+{% block extra_css %}
+<style>
+    .return-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    
+    [data-bs-theme="dark"] .return-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .form-control, .form-control:focus {
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border: 2px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .form-control {
+        border-color: #334155;
+        background: #0f172a;
+    }
+    
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .order-summary {
+        background: var(--bs-body-bg);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    [data-bs-theme="dark"] .order-summary {
+        background: #0f172a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="return-card">
+    <h2 class="mb-4 fw-bold text-center">
+        <i class="fas fa-undo text-warning"></i> Request Return
+    </h2>
+    
+    <div class="order-summary">
+        <h5 class="mb-3 fw-bold">Order Details</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Order ID:</strong> #{{ order.id }}</p>
+                <p><strong>Order Date:</strong> {{ order.date|date:"M d, Y" }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Total Amount:</strong> <span class="text-primary">₹{{ order.total_price }}</span></p>
+                <p><strong>Status:</strong> <span class="badge bg-success">{{ order.get_status_display }}</span></p>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <h6 class="mb-2">Items:</h6>
+        <ul class="list-unstyled">
+            {% for item in order.items.all %}
+            <li>{{ item.product.name }} x {{ item.quantity }} - ₹{{ item.price }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="mb-4">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-comment-alt"></i> Reason for Return
+            </label>
+            <textarea name="reason" class="form-control" rows="5" placeholder="Please explain why you want to return this order..." required></textarea>
+            <small class="text-muted">Be specific about the issue (damaged product, wrong item, quality issues, etc.)</small>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Return Policy:</strong> Items must be returned within 7 days of delivery. Once your return request is approved, you'll receive instructions for shipping the item back.
+        </div>
+        
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-warning btn-lg flex-fill">
+                <i class="fas fa-paper-plane"></i> Submit Return Request
+            </button>
+            <a href="{% url 'order_history' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - ShopHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cart-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+    }
+    
+    .cart-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    [data-bs-theme="dark"] .cart-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        transition: background 0.3s ease;
+    }
+    
+    [data-bs-theme="dark"] .cart-item {
+        border-bottom-color: #334155;
+    }
+    
+    .cart-item:hover {
+        background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-right: 1.5rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .item-placeholder {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 10px;
+        margin-right: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .item-details {
+        flex: 1;
+    }
+    
+    .item-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--bs-body-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .item-price {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #6366f1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .item-stock {
+        font-size: 0.9rem;
+        color: var(--bs-secondary-color);
+    }
+    
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .quantity-input {
+        width: 80px;
+        text-align: center;
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem;
+        font-weight: 600;
+    }
+    
+    [data-bs-theme="dark"] .quantity-input {
+        border-color: #334155;
+        background: #0f172a;
+    }
+    
+    .btn-quantity {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .item-total {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #10b981;
+        min-width: 120px;
+        text-align: right;
+    }
+    
+    .remove-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    }
+    
+    .summary-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 2rem;
+    }
+    
+    [data-bs-theme="dark"] .summary-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .summary-row {
+        border-bottom-color: #334155;
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #6366f1;
+        margin-top: 1rem;
+    }
+    
+    .checkout-btn {
+        padding: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    }
+    
+    .empty-cart {
+        text-align: center;
+        padding: 5rem 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <h1 class="mb-4 fw-bold">
+        <i class="fas fa-shopping-cart text-primary"></i> Shopping Cart
+    </h1>
+    
+    {% if cart_items %}
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="cart-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-box text-primary"></i> Cart Items ({{ cart_items.count }})
+                </h4>
+                
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    {% if item.product.images.all %}
+                        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" class="item-image">
+                    {% elif item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="item-image">
+                    {% else %}
+                        <div class="item-placeholder">
+                            <i class="fas fa-image fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="item-details">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-price">₹{{ item.product.price }}</div>
+                        <div class="item-stock">
+                            {% if item.product.stock > 0 %}
+                                <i class="fas fa-check-circle text-success"></i> In Stock ({{ item.product.stock }} available)
+                            {% else %}
+                                <i class="fas fa-times-circle text-danger"></i> Out of Stock
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="quantity-control">
+                        <form method="post" action="{% url 'update_cart' item.id %}" class="d-flex align-items-center gap-2">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-outline-primary btn-quantity" onclick="decreaseQuantity(this, {{ item.id }}, {{ item.quantity }})">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" id="qty-{{ item.id }}" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="quantity-input" readonly>
+                            <button type="button" class="btn btn-outline-primary btn-quantity" onclick="increaseQuantity(this, {{ item.id }}, {{ item.quantity }}, {{ item.product.stock }})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button type="submit" class="btn btn-success btn-sm ms-2">
+                                <i class="fas fa-check"></i> Update
+                            </button>
+                        </form>
+                    </div>
+
+                    
+                    <div class="item-total">₹{{ item.get_total }}</div>
+                    
+                    <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-danger remove-btn" onclick="return confirm('Remove this item from cart?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="summary-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-receipt text-primary"></i> Order Summary
+                </h4>
+                
+                <div class="summary-row">
+                    <span>Subtotal ({{ cart_items.count }} items)</span>
+                    <span>₹{{ total }}</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span>Delivery</span>
+                    <span class="text-success">FREE</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span>Total</span>
+                    <span>₹{{ total }}</span>
+                </div>
+                
+                <a href="{% url 'checkout' %}" class="btn btn-primary checkout-btn w-100 mt-3">
+                    <i class="fas fa-lock"></i> Proceed to Checkout
+                </a>
+                
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 mt-2">
+                    <i class="fas fa-shopping-bag"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="cart-card empty-cart">
+        <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+        <h3>Your Cart is Empty</h3>
+        <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet</p>
+        <a href="{% url 'home' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag"></i> Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+<script>
+function decreaseQuantity(button, itemId, currentQty) {
+    const input = document.getElementById('qty-' + itemId);
+    let newQty = parseInt(input.value) - 1;
+    
+    if (newQty < 1) {
+        newQty = 1;
+    }
+    
+    input.value = newQty;
+}
+
+function increaseQuantity(button, itemId, currentQty, maxStock) {
+    const input = document.getElementById('qty-' + itemId);
+    let newQty = parseInt(input.value) + 1;
+    
+    if (newQty > maxStock) {
+        alert('Sorry! Only ' + maxStock + ' items available in stock.');
+        return;
+    }
+    
+    input.value = newQty;
+}
+</script>
+
+{% endblock %}

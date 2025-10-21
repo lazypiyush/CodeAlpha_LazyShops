@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - LazyShops{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 600px;
+        margin: 3rem auto;
+    }
+    
+    .auth-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    [data-bs-theme="dark"] .auth-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+    
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select {
+        border-color: #334155;
+        background: #0f172a;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        background: var(--bs-body-bg);
+    }
+    
+    .input-group-text {
+        background: var(--card-bg);
+        border: 2px solid #e2e8f0;
+        color: var(--bs-body-color);
+    }
+    
+    [data-bs-theme="dark"] .input-group-text {
+        border-color: #334155;
+        background: #1e293b;
+    }
+    
+    .auth-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+    }
+    
+    .user-type-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 1.5rem 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    [data-bs-theme="dark"] .user-type-card {
+        border-color: #334155;
+    }
+    
+    .user-type-card:hover {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.05);
+        transform: translateY(-5px);
+    }
+    
+    .btn-check:checked + .user-type-card {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.1);
+        border-width: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-icon">
+            <i class="fas fa-user-plus fa-2x text-white"></i>
+        </div>
+        <h2 class="text-center mb-2 fw-bold">Create Account</h2>
+        <p class="text-center text-muted mb-4">Join LazyShops today!</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- User Type Selection -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold mb-3">
+                    <i class="fas fa-user-tag"></i> I want to register as:
+                </label>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="user_type" id="customer" value="customer" checked>
+                        <label class="user-type-card w-100" for="customer">
+                            <i class="fas fa-shopping-cart fa-2x text-primary mb-2 d-block"></i>
+                            <h6 class="mb-1 fw-bold">Customer</h6>
+                            <small class="text-muted">Buy products</small>
+                        </label>
+                    </div>
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="user_type" id="seller" value="seller">
+                        <label class="user-type-card w-100" for="seller">
+                            <i class="fas fa-store fa-2x text-success mb-2 d-block"></i>
+                            <h6 class="mb-1 fw-bold">Seller</h6>
+                            <small class="text-muted">Sell products</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-user"></i> First Name
+                    </label>
+                    <input type="text" name="first_name" class="form-control" placeholder="First name" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-user"></i> Last Name
+                    </label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Last name" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-at"></i> Username
+                </label>
+                <input type="text" name="username" class="form-control" placeholder="Choose a username" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-envelope"></i> Email
+                </label>
+                <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" name="password" class="form-control" placeholder="Create a password" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+        </form>
+        
+        <p class="text-center mb-0">
+            Already have an account? 
+            <a href="{% url 'login' %}" class="fw-semibold text-decoration-none" style="color: #6366f1;">
+                Login here
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

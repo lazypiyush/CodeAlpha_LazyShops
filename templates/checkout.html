@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - ShopHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
+    
+    .checkout-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    [data-bs-theme="dark"] .checkout-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        transition: background 0.3s ease;
+    }
+    
+    [data-bs-theme="dark"] .order-item {
+        border-bottom-color: #334155;
+    }
+    
+    .order-item:hover {
+        background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-right: 1.5rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .item-placeholder {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 10px;
+        margin-right: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .item-details {
+        flex: 1;
+    }
+    
+    .item-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--bs-body-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .item-price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #6366f1;
+    }
+    
+    .item-quantity {
+        color: var(--bs-secondary-color);
+        font-size: 0.9rem;
+    }
+    
+    .summary-card {
+        background: var(--bs-body-bg);
+        border-radius: 15px;
+        padding: 2rem;
+        position: sticky;
+        top: 2rem;
+    }
+    
+    [data-bs-theme="dark"] .summary-card {
+        background: #0f172a;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .summary-row {
+        border-bottom-color: #334155;
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #6366f1;
+    }
+    
+    .form-control, .form-control:focus {
+        background: var(--card-bg);
+        color: var(--bs-body-color);
+        border: 2px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+    }
+    
+    [data-bs-theme="dark"] .form-control {
+        border-color: #334155;
+        background: #1e293b;
+    }
+    
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .place-order-btn {
+        padding: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .place-order-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <h1 class="mb-4 fw-bold">
+        <i class="fas fa-shopping-bag text-primary"></i> Checkout
+    </h1>
+    
+    <div class="row">
+        <!-- Order Items -->
+        <div class="col-lg-7">
+            <div class="checkout-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-box text-primary"></i> Order Summary ({{ cart_items.count }} items)
+                </h4>
+                
+                {% for item in cart_items %}
+                <div class="order-item">
+                    {% if item.product.images.all %}
+                        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" class="item-image">
+                    {% elif item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="item-image">
+                    {% else %}
+                        <div class="item-placeholder">
+                            <i class="fas fa-image fa-2x text-white"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="item-details">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-quantity">Quantity: {{ item.quantity }}</div>
+                        <div class="item-price">₹{{ item.get_total }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Checkout Form & Summary -->
+        <div class="col-lg-5">
+            <!-- Delivery Details -->
+            <div class="checkout-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-truck text-success"></i> Delivery Details
+                </h4>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-map-marker-alt"></i> Delivery Address
+                        </label>
+                        <textarea name="address" class="form-control" rows="4" placeholder="Enter your complete delivery address" required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-phone"></i> Phone Number
+                        </label>
+                        <input type="tel" name="phone" class="form-control" placeholder="Enter your phone number" required>
+                    </div>
+                    
+                    <!-- Order Summary -->
+                    <div class="summary-card">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-receipt text-primary"></i> Price Details
+                        </h5>
+                        
+                        <div class="summary-row">
+                            <span>Subtotal ({{ cart_items.count }} items)</span>
+                            <span>₹{{ total }}</span>
+                        </div>
+                        
+                        <div class="summary-row">
+                            <span>Delivery Charges</span>
+                            <span class="text-success">FREE</span>
+                        </div>
+                        
+                        <div class="summary-row">
+                            <span>Total Amount</span>
+                            <span>₹{{ total }}</span>
+                        </div>
+                        
+                        <div class="alert alert-success mt-3 mb-0">
+                            <i class="fas fa-check-circle"></i> You will save ₹0 on this order
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success place-order-btn w-100 mt-3">
+                        <i class="fas fa-check-circle"></i> Place Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

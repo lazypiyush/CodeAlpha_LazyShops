@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Product - ShopHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
+    
+    [data-bs-theme="dark"] .form-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .form-control, .form-control:focus {
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border: 2px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .form-control {
+        border-color: #334155;
+        background: #0f172a;
+    }
+    
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .existing-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .existing-image {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        aspect-ratio: 1;
+        border: 3px solid #e2e8f0;
+        cursor: grab;
+        transition: all 0.3s ease;
+    }
+    
+    [data-bs-theme="dark"] .existing-image {
+        border-color: #334155;
+    }
+    
+    .existing-image:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .existing-image.dragging {
+        opacity: 0.4;
+        border-color: #6366f1;
+    }
+    
+    .existing-image.over {
+        border-color: #6366f1;
+        border-style: dashed;
+        transform: scale(1.05);
+    }
+    
+    .existing-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .image-delete-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: transform 0.2s;
+    }
+    
+    .image-delete-btn:hover {
+        transform: scale(1.1);
+    }
+    
+    .image-order-badge {
+        position: absolute;
+        bottom: 5px;
+        left: 5px;
+        background: #6366f1;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        pointer-events: none;
+    }
+    
+    .main-image-badge {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background: #10b981;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        pointer-events: none;
+    }
+    
+    .reorder-buttons {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+    }
+    
+    .existing-image:hover .reorder-buttons {
+        opacity: 1;
+        pointer-events: all;
+    }
+    
+    .reorder-btn {
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+    
+    .reorder-btn:hover {
+        transform: scale(1.1);
+    }
+    
+    .image-upload-area {
+        border: 3px dashed #cbd5e1;
+        border-radius: 15px;
+        padding: 3rem;
+        text-align: center;
+        background: var(--bs-body-bg);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .image-upload-area:hover {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .input-group-text {
+        background: var(--card-bg);
+        border: 2px solid #e2e8f0;
+        color: var(--bs-body-color);
+        font-weight: 600;
+    }
+    
+    [data-bs-theme="dark"] .input-group-text {
+        border-color: #334155;
+        background: #1e293b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <h2 class="mb-4 fw-bold text-center">
+        <i class="fas fa-edit text-primary"></i> Edit Product
+    </h2>
+    
+    <!-- Existing Images -->
+    {% if product.images.all %}
+    <div class="mb-4">
+        <h5 class="fw-bold mb-3">
+            <i class="fas fa-images text-primary"></i> Current Images
+        </h5>
+        <div class="alert alert-info">
+            <i class="fas fa-arrows-alt"></i> <strong>Drag images to reorder</strong> or use arrow buttons. The first image is the main product image shown on listings.
+        </div>
+        <div class="existing-images" id="existingImagesContainer">
+            {% for img in product.images.all %}
+            <div class="existing-image" draggable="true" data-id="{{ img.id }}" data-order="{{ img.order }}">
+                <img src="{{ img.image.url }}" alt="{{ product.name }}">
+                <a href="{% url 'delete_product_image' img.id %}" class="image-delete-btn" onclick="return confirm('Delete this image?')">
+                    <i class="fas fa-times"></i>
+                </a>
+                <div class="reorder-buttons">
+                    {% if not forloop.first %}
+                        <button type="button" class="reorder-btn" onclick="moveImage({{ img.id }}, {{ img.order }}, 'left')">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                    {% endif %}
+                    {% if not forloop.last %}
+                        <button type="button" class="reorder-btn" onclick="moveImage({{ img.id }}, {{ img.order }}, 'right')">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    {% endif %}
+                </div>
+                {% if forloop.first %}
+                    <span class="main-image-badge"><i class="fas fa-star"></i> Main</span>
+                {% endif %}
+                <span class="image-order-badge">#{{ forloop.counter }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-tag"></i> Product Name
+            </label>
+            <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-align-left"></i> Description
+            </label>
+            <textarea name="description" class="form-control" rows="4" required>{{ product.description }}</textarea>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-rupee-sign"></i> Price (₹)
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text">₹</span>
+                    <input type="number" name="price" class="form-control" value="{{ product.price }}" step="0.01" min="0" required>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-boxes"></i> Stock Quantity
+                </label>
+                <input type="number" name="stock" class="form-control" value="{{ product.stock }}" min="0" required>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-plus-circle"></i> Add More Images
+            </label>
+            
+            <div class="image-upload-area" onclick="document.getElementById('imageInput').click()">
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <h5>Click to upload additional images</h5>
+                <p class="text-muted mb-0">Select multiple images</p>
+            </div>
+            
+            <input type="file" id="imageInput" name="images" class="d-none" accept="image/*" multiple>
+            
+            <div id="newImagePreview" class="existing-images mt-3"></div>
+        </div>
+        
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary btn-lg flex-fill">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+
+            <a href="{% url 'seller_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+var reorderUrl = "{% url 'reorder_product_images' product.id %}";
+var csrfToken = "{{ csrf_token }}";
+
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('existingImagesContainer');
+    const imageInput = document.getElementById('imageInput');
+    const previewContainer = document.getElementById('newImagePreview');
+    
+    // Image preview for new uploads
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            previewContainer.innerHTML = '';
+            const files = e.target.files;
+            
+            if (files.length > 0) {
+                const previewTitle = document.createElement('h6');
+                previewTitle.className = 'fw-bold mb-3 text-success';
+                previewTitle.innerHTML = '<i class="fas fa-check-circle"></i> New Images to be Added (' + files.length + ')';
+                previewContainer.appendChild(previewTitle);
+                
+                const grid = document.createElement('div');
+                grid.className = 'existing-images';
+                
+                Array.from(files).forEach(function(file, index) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'existing-image';
+                        div.innerHTML = '<img src="' + e.target.result + '" alt="New image ' + (index + 1) + '"><span class="image-order-badge bg-success">New #' + (index + 1) + '</span>';
+                        grid.appendChild(div);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+                
+                previewContainer.appendChild(grid);
+            }
+        });
+    }
+    
+    // Drag and drop for existing images
+    if (!container) return;
+    
+    var dragSrcEl = null;
+    const imageBoxes = container.querySelectorAll('.existing-image');
+    
+    imageBoxes.forEach(function(box) {
+        box.addEventListener('dragstart', handleDragStart);
+        box.addEventListener('dragover', handleDragOver);
+        box.addEventListener('drop', handleDrop);
+        box.addEventListener('dragenter', handleDragEnter);
+        box.addEventListener('dragleave', handleDragLeave);
+        box.addEventListener('dragend', handleDragEnd);
+    });
+    
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleDragEnter(e) {
+        if (this !== dragSrcEl) {
+            this.classList.add('over');
+        }
+    }
+    
+    function handleDragLeave(e) {
+        this.classList.remove('over');
+    }
+    
+    function handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        if (dragSrcEl !== this) {
+            const fromId = parseInt(dragSrcEl.dataset.id);
+            const toId = parseInt(this.dataset.id);
+            const fromOrder = parseInt(dragSrcEl.dataset.order);
+            const toOrder = parseInt(this.dataset.order);
+            
+            swapImages(fromId, toId, fromOrder, toOrder);
+        }
+        
+        this.classList.remove('over');
+        return false;
+    }
+    
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        container.querySelectorAll('.existing-image').forEach(function(el) {
+            el.classList.remove('over');
+        });
+    }
+    
+    function swapImages(fromId, toId, fromOrder, toOrder) {
+        const orderData = [
+            {id: fromId, order: toOrder},
+            {id: toId, order: fromOrder}
+        ];
+        
+        saveOrder(orderData);
+    }
+    
+    function saveOrder(orderData) {
+        fetch(reorderUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(orderData)
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.status === 'success') {
+                location.reload();
+            }
+        })
+        .catch(function(error) { console.error('Error:', error); });
+    }
+});
+
+function moveImage(imageId, currentOrder, direction) {
+    var newOrder = direction === 'left' ? currentOrder - 1 : currentOrder + 1;
+    
+    const orderData = [{id: imageId, order: newOrder}];
+    
+    fetch(reorderUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.status === 'success') {
+            location.reload();
+        }
+    })
+    .catch(function(error) { console.error('Error:', error); });
+}
+</script>
+{% endblock %}

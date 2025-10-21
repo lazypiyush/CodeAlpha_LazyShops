@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load currency_filters %}
+
+{% block title %}Seller Dashboard - LazyShops{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    [data-bs-theme="dark"] .stats-card {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .stats-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-table {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    [data-bs-theme="dark"] .product-table {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .table {
+        color: var(--bs-body-color);
+    }
+    
+    .table thead {
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .table thead {
+        border-bottom-color: #334155;
+    }
+    
+    .table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    [data-bs-theme="dark"] .table tbody tr {
+        border-bottom-color: #334155;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="fw-bold">
+        <i class="fas fa-tachometer-alt text-primary"></i> Seller Dashboard
+    </h1>
+    <a href="{% url 'add_product' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> Add New Product
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stats-value text-primary">{{ total_products }}</div>
+            <p class="text-muted mb-0">Total Products</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon bg-success bg-opacity-10 text-success">
+                <i class="fas fa-rupee-sign"></i>
+            </div>
+            <div class="stats-value text-success">{{ total_sales|rupees }}</div>
+            <p class="text-muted mb-0">Net Sales</p>
+            {% if total_refunded > 0 %}
+                <small class="text-danger">
+                    <i class="fas fa-arrow-down"></i> -{{ total_refunded|rupees }} refunded
+                </small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stats-value text-warning">{{ total_orders }}</div>
+            <p class="text-muted mb-0">Total Orders</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon bg-danger bg-opacity-10 text-danger">
+                <i class="fas fa-undo"></i>
+            </div>
+            <div class="stats-value text-danger">{{ total_refunded|rupees }}</div>
+            <p class="text-muted mb-0">Total Refunded</p>
+        </div>
+    </div>
+</div>
+
+<!-- My Products -->
+<div class="product-table mb-4">
+    <h3 class="mb-4 fw-bold">
+        <i class="fas fa-boxes text-primary"></i> My Products
+    </h3>
+    
+    {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Date Added</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if product.images.all %}
+                                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 1rem;">
+                                {% elif product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 1rem;">
+                                {% else %}
+                                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; margin-right: 1rem; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-image text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <strong>{{ product.name }}</strong>
+                            </div>
+                        </td>
+                        <td class="text-primary fw-bold">{{ product.price|rupees }}</td>
+                        <td>
+                            {% if product.stock > 10 %}
+                                <span class="badge bg-success">{{ product.stock }}</span>
+                            {% elif product.stock > 0 %}
+                                <span class="badge bg-warning text-dark">{{ product.stock }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ product.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" 
+                                   onclick="return confirm('Are you sure you want to delete this product?')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+            <p class="text-muted mb-3">You haven't added any products yet</p>
+            <a href="{% url 'add_product' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Add Your First Product
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+
+<!-- Recent Orders -->
+{% if orders %}
+<div class="product-table mb-4">
+    <h3 class="mb-4 fw-bold">
+        <i class="fas fa-shopping-bag text-success"></i> Recent Orders
+    </h3>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Total Price</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Update Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in orders %}
+                <tr>
+                    <td><strong>#{{ item.order.id }}</strong></td>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.price|rupees }}</td>
+                    <td class="text-success fw-bold">
+                        {% widthratio item.price 1 item.quantity as total_price %}
+                        ₹{{ total_price|floatformat:2 }}
+                    </td>
+                    <td>{{ item.order.customer.username }}</td>
+                    <td>{{ item.order.date|date:"M d, Y" }}</td>
+                    <td>
+                        {% if item.order.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif item.order.status == 'processing' %}
+                            <span class="badge bg-info text-white">Processing</span>
+                        {% elif item.order.status == 'shipped' %}
+                            <span class="badge bg-primary text-white">Shipped</span>
+                        {% elif item.order.status == 'delivered' %}
+                            <span class="badge bg-success text-white">Delivered</span>
+                        {% elif item.order.status == 'cancelled' %}
+                            <span class="badge bg-danger text-white">Cancelled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'update_order_status' item.order.id %}">
+                            {% csrf_token %}
+                            <div class="d-flex gap-2">
+                                <select name="status" class="form-select form-select-sm" required>
+                                    <option value="pending" {% if item.order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                    <option value="processing" {% if item.order.status == 'processing' %}selected{% endif %}>Processing</option>
+                                    <option value="shipped" {% if item.order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                    <option value="delivered" {% if item.order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                    <option value="cancelled" {% if item.order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Return Requests -->
+{% if return_requests %}
+<div class="product-table mt-4">
+    <h3 class="mb-4 fw-bold">
+        <i class="fas fa-undo text-warning"></i> Return & Refund Management
+    </h3>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Process: 1) Approve → 2) Wait for item → 3) Mark as received → 4) Initiate refund → 5) Complete refund
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Tracking</th>
+                    <th>Request Date</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for return_req in return_requests %}
+                <tr>
+                    <td><strong>#{{ return_req.id }}</strong></td>
+                    <td><strong>#{{ return_req.order.id }}</strong></td>
+                    <td>{{ return_req.order.customer.username }}</td>
+                    <td class="fw-bold text-primary">₹{{ return_req.order.total_price }}</td>
+                    <td>
+                        {% if return_req.tracking_number %}
+                            <span class="badge bg-info">{{ return_req.tracking_number }}</span>
+                        {% else %}
+                            <span class="text-muted small">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ return_req.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if return_req.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">⏳ Pending</span>
+                        {% elif return_req.status == 'approved' %}
+                            <span class="badge bg-info text-white">✓ Approved - Waiting for Item</span>
+                        {% elif return_req.status == 'rejected' %}
+                            <span class="badge bg-danger text-white">✗ Rejected</span>
+                        {% elif return_req.status == 'item_received' %}
+                            <span class="badge bg-success text-white">📦 Item Received</span>
+                        {% elif return_req.status == 'refund_processing' %}
+                            <span class="badge bg-primary text-white">💰 Refund Processing</span>
+                        {% elif return_req.status == 'refund_completed' %}
+                            <span class="badge bg-success text-white">✓ Refund Completed</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <!-- PENDING: Show Approve/Reject -->
+                        {% if return_req.status == 'pending' %}
+                            <div class="d-flex justify-content-center gap-2">
+                                <form method="POST" action="{% url 'handle_return_request' return_req.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approve this return? Customer will ship the item back.')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                </form>
+                                <form method="POST" action="{% url 'handle_return_request' return_req.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Reject this return request?')">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+                        
+                        <!-- APPROVED: Show Mark as Received -->
+                        {% elif return_req.status == 'approved' %}
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#receivedModal{{ return_req.id }}">
+                                <i class="fas fa-box"></i> Mark as Received
+                            </button>
+                            
+                            <!-- Received Modal -->
+                            <div class="modal fade" id="receivedModal{{ return_req.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content" style="background: var(--card-bg); color: var(--bs-body-color);">
+                                        <form method="POST" action="{% url 'handle_return_request' return_req.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="item_received">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirm Item Receipt</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Confirm that you have received the returned item for Order #{{ return_req.order.id }}?</p>
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle"></i> Stock will be restored automatically.
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-success">Confirm Receipt</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <!-- ITEM RECEIVED: Show Initiate Refund -->
+                        {% elif return_req.status == 'item_received' %}
+                            <form method="POST" action="{% url 'handle_return_request' return_req.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="initiate_refund">
+                                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Initiate refund of ₹{{ return_req.order.total_price }}?')">
+                                    <i class="fas fa-money-bill-wave"></i> Initiate Refund
+                                </button>
+                            </form>
+                        
+                        <!-- REFUND PROCESSING: Show Complete Refund -->
+                        {% elif return_req.status == 'refund_processing' %}
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#completeRefundModal{{ return_req.id }}">
+                                <i class="fas fa-check-circle"></i> Complete Refund
+                            </button>
+                            
+                            <!-- Complete Refund Modal -->
+                            <div class="modal fade" id="completeRefundModal{{ return_req.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content" style="background: var(--card-bg); color: var(--bs-body-color);">
+                                        <form method="POST" action="{% url 'handle_return_request' return_req.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="complete_refund">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Complete Refund</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Complete refund for Order #{{ return_req.order.id }}</p>
+                                                <p><strong>Refund Amount:</strong> <span class="text-success fs-5">₹{{ return_req.refund_amount }}</span></p>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Refund Method</label>
+                                                    <select name="refund_method" class="form-select" required>
+                                                        <option value="Original Payment Method">Original Payment Method</option>
+                                                        <option value="Bank Transfer">Bank Transfer</option>
+                                                        <option value="Store Credit">Store Credit</option>
+                                                        <option value="Cash">Cash</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-success">Complete Refund</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <!-- REFUND COMPLETED: Show Details -->
+                        {% elif return_req.status == 'refund_completed' %}
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#refundDetailsModal{{ return_req.id }}">
+                                <i class="fas fa-info-circle"></i> View Details
+                            </button>
+                            
+                            <!-- Refund Details Modal -->
+                            <div class="modal fade" id="refundDetailsModal{{ return_req.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content" style="background: var(--card-bg); color: var(--bs-body-color);">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Refund Details</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Order #:</strong> {{ return_req.order.id }}</p>
+                                            <p><strong>Refund Amount:</strong> <span class="text-success">₹{{ return_req.refund_amount }}</span></p>
+                                            <p><strong>Refund Date:</strong> {{ return_req.refund_date|date:"M d, Y H:i" }}</p>
+                                            <p><strong>Refund Method:</strong> {{ return_req.refund_method }}</p>
+                                            <p><strong>Customer:</strong> {{ return_req.order.customer.username }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        {% else %}
+                            <span class="text-muted">{{ return_req.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

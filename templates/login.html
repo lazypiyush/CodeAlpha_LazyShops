@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - LazyShops{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 500px;
+        margin: 3rem auto;
+    }
+    
+    .auth-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    [data-bs-theme="dark"] .auth-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .form-control {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+    
+    [data-bs-theme="dark"] .form-control {
+        border-color: #334155;
+        background: #0f172a;
+    }
+    
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        background: var(--bs-body-bg);
+    }
+    
+    .input-group-text {
+        background: var(--card-bg);
+        border: 2px solid #e2e8f0;
+        color: var(--bs-body-color);
+    }
+    
+    [data-bs-theme="dark"] .input-group-text {
+        border-color: #334155;
+        background: #1e293b;
+    }
+    
+    .auth-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-icon">
+            <i class="fas fa-user fa-2x text-white"></i>
+        </div>
+        <h2 class="text-center mb-4 fw-bold">Welcome Back!</h2>
+        <p class="text-center text-muted mb-4">Login to your account</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" name="username" class="form-control" placeholder="Enter your username" required>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+        
+        <p class="text-center mb-0">
+            Don't have an account? <a href="{% url 'register' %}" class="fw-semibold text-decoration-none" style="color: #6366f1;">Register here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
